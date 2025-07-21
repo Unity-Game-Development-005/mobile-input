@@ -21,6 +21,9 @@ public class playerMovement : MonoBehaviour
     // radius bounds of the dpad control
     public float dPadRadius = 15f;
 
+    // touch phase and position
+    private Touch theTouch;
+
 
 
 
@@ -40,8 +43,11 @@ public class playerMovement : MonoBehaviour
         //getting input from keyboard controls
         //calculateDesktopInputs();
 
-        // get mouse/touch input
+        // get mouse input
         calculateMobileInput();
+
+        // get touch input
+        calculateTouchInput();
 
         //sets up the animator
         animationSetup();
@@ -137,6 +143,67 @@ public class playerMovement : MonoBehaviour
             {
                 // simply move the dpad control to the new mouse position
                 dPad.transform.position = touchEnd;
+            }
+        }
+
+        // otherwise
+        else
+        {
+            // stop the player moving
+            inputDirection = Vector2.zero;
+
+            // hide the dpad control
+            dPad.gameObject.SetActive(false);
+        }
+    }
+
+
+    private void calculateTouchInput()
+    {
+        // if at least one finger has touched the screen
+        if (Input.touchCount > 0)
+        {
+            // get the first registered touch
+            theTouch = Input.GetTouch(0);
+
+            // show thw dpad control
+            dPad.gameObject.SetActive(true);
+
+            // if the touch phase is starting - equals 'began'
+            if (theTouch.phase == TouchPhase.Began)
+            {
+                // get the start position of the touch
+                touchStart = theTouch.position;
+            }
+
+            // otherwise
+            // if the touch phase is equal to 'moved' or the touch phase equals 'ended'
+            else if (theTouch.phase == TouchPhase.Moved || theTouch.phase == TouchPhase.Ended)
+            {
+                // get the end position of the touch
+                touchEnd = theTouch.position;
+
+                // calculate the player's movement direction based on the position of the touch
+                float x = touchEnd.x - touchStart.x;
+
+                float y = touchEnd.y - touchStart.y;
+
+                // normalise the player's movement direction
+                inputDirection = new Vector2(x, y).normalized;
+
+                // if the movement of the mouse goes outside the radius bounds of the dpad control
+                if ((touchEnd - touchStart).magnitude > dPadRadius)
+                {
+                    // then set the position of the dpad control to the radius bounds
+                    dPad.transform.position = touchStart + (touchEnd - touchStart).normalized * dPadRadius;
+                }
+
+                // otherwise
+                else
+                {
+                    // simply move the dpad control to the new mouse position
+                    dPad.transform.position = touchEnd;
+                }
             }
         }
 
